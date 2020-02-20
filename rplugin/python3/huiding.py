@@ -74,12 +74,13 @@ def GetMoney(p):
 
 
 def GetGupiaoLists(info):
-    ratio = (info['now'] - info['close']) / info['close']
+    change = (info['now'] - info['close'])
+    ratio =  change / info['close']
     lines = [
         "{:^9}: {}".format('公司名称', info['name']),
         "{:^10}: {:.2f}".format(' 开盘价 ', info['close']),
         "{:^10}: {:.2f}".format(' 当前价 ', info['now']),
-        "{:^11}: {:.2%}".format('  涨幅  ', ratio)]
+        "{:^11}: {:.2%} {:6.2f}".format('  涨幅  ', ratio, change)]
     return lines
 
 
@@ -103,7 +104,7 @@ class Huiding(object):
     def command_handler(self, args, range):
         self.vim.command('hi Type ctermfg=green')
         self.vim.command('hi Number ctermfg=red')
-        self.vim.command("new gupiao")
+        self.vim.command('hi Boolean ctermfg=blue')
         buf_number = self.vim.current.buffer.number
         while(True):
             info = self.quotation.real('603160')['603160']
@@ -113,7 +114,11 @@ class Huiding(object):
             self.vim.buffers[buf_number][:] = lines
 
             hi_type = "Number" if info['now'] > info['close'] else "Type"
-            for i in np.arange(len(lines)):
-                self.vim.buffers[buf_number].add_highlight(
-                        hi_type, int(i), 0, -1, -1)
+            
+            hi_lists = [[hi_type, int(i), 13, -1] for i in np.arange(len(lines))]
+            hi_lists[0][0] = 'Boolean'
+            hi_lists.extend([['Boolean', int(i), 0, 13] for i in np.arange(len(lines))])
+            src_id = self.vim.new_highlight_source()
+            self.vim.buffers[buf_number].update_highlights(
+                src_id, hi_lists, clear=True, async_=False)
             time.sleep(1)
