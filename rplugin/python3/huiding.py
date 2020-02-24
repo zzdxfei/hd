@@ -100,8 +100,15 @@ class Huiding(object):
         self.quotation = easyquotation.use('sina')
         self.quotation.market_snapshot(prefix=True)
 
+    @pynvim.command('HuidingOnce', range='', nargs='1', sync=True)
+    def HuidingOnce(self, args, range):
+        infos = GetMoney(float(args[0]))
+        line = "{:.2f}, {:.2f}, {:.2f}, {:.2f}".format(
+                float(args[0]), infos[0],infos[1], infos[2])
+        self.vim.current.line = line
+
     @pynvim.command('Huiding', range='', nargs='0', sync=False)
-    def command_handler(self, args, range):
+    def Huiding(self, args, range):
         self.vim.command('hi Type ctermfg=green')
         self.vim.command('hi Number ctermfg=red')
         self.vim.command('hi Boolean ctermfg=blue')
@@ -111,7 +118,7 @@ class Huiding(object):
             lines = GetGupiaoLists(info)
             owns = GetMoney(info['now'])
             lines.extend(GetGupiaoOwns(owns))
-            self.vim.buffers[buf_number][:] = lines
+            self.vim.buffers[buf_number][:len(lines)] = lines
 
             hi_type = "Number" if info['now'] > info['close'] else "Type"
             
